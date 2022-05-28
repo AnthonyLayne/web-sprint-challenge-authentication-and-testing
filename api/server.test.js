@@ -1,6 +1,4 @@
-// Write your tests
-
-//MINIMUM 2 Tests PER ENDPOINT
+// Write your tests here
 test("sanity", () => {
-  expect(true).toBe(true);
+  expect(true).toBe(false);
 });
