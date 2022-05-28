@@ -1,7 +1,26 @@
-const router = require('express').Router();
+const router = require("express").Router();
+//const { JWT_SECRET } = require("../secrets");
+const bcrypt = require("bcryptjs");
+const USER = require("../auth/auth-model");
 
-router.post('/register', (req, res) => {
-  res.end('implement register, please!');
+router.post("/register", async (req, res, next) => {
+  try {
+    let { username, password } = req.body;
+
+    let alreadyExists = (await USER.findByUsername(username).first()) !== null;
+    if (alreadyExists) {
+      next({ status: 400, message: "user already exists" });
+      return;
+    }
+
+    let hash = bcrypt.hashSync(password, 8);
+    let result = await USER.addUser({ username, password: hash });
+    res.json(result);
+    res.status(201).json({ message: `You are now registered as "${username}"` });
+  } catch (err) {
+    next(err);
+  }
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
@@ -29,8 +48,8 @@ router.post('/register', (req, res) => {
   */
 });
 
-router.post('/login', (req, res) => {
-  res.end('implement login, please!');
+router.post("/login", (req, res) => {
+  res.end("implement login, please!");
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
