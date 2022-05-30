@@ -1,22 +1,24 @@
 const router = require("express").Router();
-//const { JWT_SECRET } = require("../secrets");
 const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+
+const { JWT_SECRET } = require("../secrets");
 const USER = require("../auth/auth-model");
 
 router.post("/register", async (req, res, next) => {
   try {
-    let { username, password } = req.body;
+    const { username, password } = req.body;
 
-    let alreadyExists = (await USER.findByUsername(username).first()) !== null;
+    const alreadyExists = Boolean(await USER.findByUsername(username));
+
     if (alreadyExists) {
-      next({ status: 400, message: "user already exists" });
-      return;
+      return res.status(400).json({ message: "username taken" });
     }
 
-    let hash = bcrypt.hashSync(password, 8);
-    let result = await USER.addUser({ username, password: hash });
-    res.json(result);
-    res.status(201).json({ message: `You are now registered as "${username}"` });
+    const hash = bcrypt.hashSync(password, 8);
+    const result = await USER.addUser({ username, password: hash });
+
+    return res.status(201).json(result);
   } catch (err) {
     next(err);
   }
@@ -48,8 +50,18 @@ router.post("/register", async (req, res, next) => {
   */
 });
 
-router.post("/login", (req, res) => {
-  res.end("implement login, please!");
+router.post("/login", async (req, res) => {
+  const { username, password } = req.body;
+
+  const user = await USER.findByUsername(username);
+
+  if (!user || !bcrypt.compareSync(password, user.password)) {
+    return res.status(401).json({ message: "invalid credentials" });
+  }
+
+  const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: "1d" });
+  return res.status(200).json({ message: `welcome, ${user.username}`, token });
+
   /*
     IMPLEMENT
     You are welcome to build additional middlewares to help with the endpoint's functionality.
