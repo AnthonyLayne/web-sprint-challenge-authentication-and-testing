@@ -14,12 +14,12 @@ const validateAuth = (req, res, next) => {
 const restricted = (req, res, next) => {
   const token = req.headers.authorization;
   if (!token) {
-    return res.json({ status: 401, message: "token required" });
+    return res.status(401).json({ message: "token required" });
   }
 
   jwt.verify(token, JWT_SECRET, (err) => {
     if (err) {
-      res.json({ status: 401, message: "token invalid" });
+      return res.status(401).json({ message: "token invalid" });
     } else {
       next();
     }
